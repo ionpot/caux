@@ -1,5 +1,5 @@
-#ifndef STR_H
-#define STR_H
+#ifndef CHR_H
+#define CHR_H
 
 int is_upper(byte);
 int is_lower(byte);

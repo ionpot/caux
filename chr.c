@@ -1,5 +1,5 @@
 #include "def.h"
-#include "str.h"
+#include "chr.h"
 
 int
 is_upper(byte b)
