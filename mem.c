@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "def.h"
-#include "mpool.h"
+#include "mem.h"
 
 #define MAX_POOLS 32
 #define NODE_SIZE sizeof(Node)
@@ -29,7 +29,7 @@ static size_t next_pool_size = KiB(4);
 
 /* define */
 void
-mpool_init(void)
+mem_init(void)
 {
 	Node *node = new_pool();
 	node->next = nil;
@@ -37,7 +37,7 @@ mpool_init(void)
 }
 
 void
-mpool_destroy(void)
+mem_destroy(void)
 {
 	while (pool_count > 0) {
 		pool_count -= 1;
@@ -51,7 +51,7 @@ mpool_destroy(void)
 }
 
 void *
-mpool_alloc(size_t size)
+mem_alloc(size_t size)
 {
 	void *ptr = seek(size);
 
@@ -61,14 +61,14 @@ mpool_alloc(size_t size)
 
 	expand_pool(size);
 
-	return mpool_alloc(size);
+	return mem_alloc(size);
 }
 
 
 void *
-mpool_realloc(void *src, size_t size)
+mem_realloc(void *src, size_t size)
 {
-	void *dst = mpool_alloc(size);
+	void *dst = mem_alloc(size);
 	Node *node = NODE_OF(src);
 	size_t sz = MIN(size, node->size);
 
@@ -78,7 +78,7 @@ mpool_realloc(void *src, size_t size)
 }
 
 void
-mpool_free(void *ptr)
+mem_free(void *ptr)
 {
 	Node *node = NODE_OF(ptr);
 	node->next = available;
