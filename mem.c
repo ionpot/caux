@@ -15,8 +15,7 @@ typedef struct Node {
 } Node;
 
 /* declare */
-static Node *new_pool(size_t size);
-static void expand_pool(size_t size);
+static void new_pool(size_t size);
 static void *seek(size_t size);
 static void *exact(Node *node, Node **prev);
 static void *split(Node *node, size_t size, Node **prev);
@@ -35,8 +34,7 @@ mem_init(void)
 {
 	pools.count = 0;
 
-	available = new_pool(KiB(4));
-	available->next = nil;
+	new_pool(KiB(4));
 }
 
 void
@@ -60,12 +58,16 @@ mem_destroy(void)
 void *
 mem_alloc(size_t size)
 {
+	size_t nsize = pools.next_size;
 	void *ptr = seek(size);
 
 	if (ptr)
 		return ptr;
 
-	expand_pool(size);
+	while (nsize < size)
+		nsize *= 2;
+
+	new_pool(nsize);
 
 	return mem_alloc(size);
 }
@@ -92,7 +94,7 @@ mem_free(void *ptr)
 }
 
 /* static */
-Node *
+void
 new_pool(size_t size)
 {
 	int count = pools.count;
@@ -110,20 +112,6 @@ new_pool(size_t size)
 	pools.bufs[count] = node;
 	pools.count = count + 1;
 	pools.next_size = size * 2;
-
-	return node;
-}
-
-void
-expand_pool(size_t size)
-{
-	size_t nsize = pools.next_size;
-	Node *node = nil;
-
-	while (nsize < size)
-		nsize *= 2;
-
-	node = new_pool(nsize);
 
 	node->next = available;
 	available = node;
