@@ -62,9 +62,8 @@ mem_alloc(size_t size)
 {
 	void *ptr = seek(size);
 
-	if (ptr) {
+	if (ptr)
 		return ptr;
-	}
 
 	expand_pool(size);
 
@@ -99,21 +98,18 @@ new_pool(size_t size)
 	int count = pools.count;
 	Node *node = nil;
 
-	if (count < MAX_POOLS) {
+	if (count < MAX_POOLS)
 		node = malloc(size);
-	}
 
-	if (node) {
-		node->size = size - NODE_SIZE;
-		node->next = nil;
-
-		pools.bufs[count] = node;
-		pools.count = count + 1;
-		pools.next_size = size * 2;
-
-	} else {
+	if (node == nil)
 		exit(0);
-	}
+
+	node->size = size - NODE_SIZE;
+	node->next = nil;
+
+	pools.bufs[count] = node;
+	pools.count = count + 1;
+	pools.next_size = size * 2;
 
 	return node;
 }
@@ -124,9 +120,8 @@ expand_pool(size_t size)
 	size_t nsize = pools.next_size;
 	Node *node = nil;
 
-	while (nsize < size) {
+	while (nsize < size)
 		nsize *= 2;
-	}
 
 	node = new_pool(nsize);
 
@@ -142,17 +137,15 @@ seek(size_t size)
 	Node *node = available;
 	Node **prev = &available;
 
-	while (node)  {
+	while (node) {
 		size_found = node->size;
 
-		if (size_found == size) {
+		if (size_found == size)
 			return exact(node, prev);
-		}
 
 		if (size_found > size) {
-			if (size_found > MIN_SIZE) {
+			if (size_found > MIN_SIZE)
 				return split(node, size, prev);
-			}
 
 			return exact(node, prev);
 		}
