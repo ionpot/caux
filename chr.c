@@ -2,19 +2,19 @@
 #include "chr.h"
 
 int
-is_upper(byte b)
+is_upper(char b)
 {
 	return ASC('A', b, 'Z');
 }
 
 int
-is_lower(byte b)
+is_lower(char b)
 {
 	return ASC('a', b, 'z');
 }
 
 int
-is_alpha(byte b)
+is_alpha(char b)
 {
 	return is_upper(b)
 		|| is_lower(b)
@@ -22,25 +22,25 @@ is_alpha(byte b)
 }
 
 int
-is_num(byte b)
+is_num(char b)
 {
 	return ASC('0', b, '9');
 }
 
 int
-is_alphanum(byte b)
+is_alphanum(char b)
 {
 	return is_alpha(b) || is_num(b);
 }
 
 int
-is_ws(byte b)
+is_ws(char b)
 {
 	return (b == ' ') || (b == '\t');
 }
 
 int
-utf8_trailing(byte b)
+utf8_trailing(char b)
 {
 	if (b < 0x80) {
 		return 0;
@@ -62,7 +62,7 @@ utf8_trailing(byte b)
 }
 
 int
-utf8_continuation(byte b)
+utf8_continuation(char b)
 {
 	return ASC(0x80, b, 0xBF);
 }
