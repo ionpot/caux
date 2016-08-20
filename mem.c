@@ -15,7 +15,7 @@ typedef struct Node {
 } Node;
 
 /* declare */
-static Node *new_pool(void);
+static Node *new_pool(size_t size);
 static void expand_pool(size_t size);
 static void *seek(size_t size);
 static void *exact(Node *node, Node **prev);
@@ -23,30 +23,37 @@ static void *split(Node *node, size_t size, Node **prev);
 
 /* local */
 static Node *available = nil;
-static void *pools[MAX_POOLS];
-static int pool_count = 0;
-static size_t next_pool_size = KiB(4);
+static struct {
+	void *bufs[MAX_POOLS];
+	int count;
+	size_t next_size;
+} pools;
 
 /* define */
 void
 mem_init(void)
 {
-	Node *node = new_pool();
-	node->next = nil;
-	available = node;
+	pools.count = 0;
+
+	available = new_pool(KiB(4));
+	available->next = nil;
 }
 
 void
 mem_destroy(void)
 {
-	while (pool_count > 0) {
-		pool_count -= 1;
+	int i = pools.count;
+	void **bufs = pools.bufs;
 
-		free(pools[pool_count]);
+	while (i > 0) {
+		i -= 1;
 
-		pools[pool_count] = nil;
+		free(bufs[i]);
+
+		bufs[i] = nil;
 	}
 
+	pools.count = 0;
 	available = nil;
 }
 
@@ -87,22 +94,22 @@ mem_free(void *ptr)
 
 /* static */
 Node *
-new_pool(void)
+new_pool(size_t size)
 {
+	int count = pools.count;
 	Node *node = nil;
 
-	if (pool_count < MAX_POOLS) {
-		node = malloc(next_pool_size);
+	if (count < MAX_POOLS) {
+		node = malloc(size);
 	}
 
 	if (node) {
-		node->size = next_pool_size - NODE_SIZE;
+		node->size = size - NODE_SIZE;
 		node->next = nil;
 
-		pools[pool_count] = node;
-
-		pool_count += 1;
-		next_pool_size *= 2;
+		pools.bufs[count] = node;
+		pools.count = count + 1;
+		pools.next_size = size * 2;
 
 	} else {
 		exit(0);
@@ -114,13 +121,14 @@ new_pool(void)
 void
 expand_pool(size_t size)
 {
+	size_t nsize = pools.next_size;
 	Node *node = nil;
 
-	while (next_pool_size < size) {
-		next_pool_size *= 2;
+	while (nsize < size) {
+		nsize *= 2;
 	}
 
-	node = new_pool();
+	node = new_pool(nsize);
 
 	node->next = available;
 	available = node;
