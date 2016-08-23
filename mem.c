@@ -30,11 +30,11 @@ static struct {
 
 /* define */
 void
-mem_init(void)
+mem_init(size_t size)
 {
 	pools.count = 0;
 
-	new_pool(KiB(4));
+	new_pool(size);
 }
 
 void
