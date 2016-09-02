@@ -15,18 +15,26 @@ typedef struct Node {
 } Node;
 
 /* declare */
-static void new_pool(size_t size);
-static void *seek(size_t size);
-static void *exact(Node *node, Node **prev);
-static void *split(Node *node, size_t size, Node **prev);
+static Node *new_pool(size_t size);
+static Node *seek(size_t size);
+static void nodes_add(Node *);
+static Node *nodes_rmv(void);
+static Node *nodes_rewind(void);
+static Node *nodes_next(void);
+static void nodes_split(size_t size);
 
 /* local */
-static Node *available = nil;
 static struct {
 	void *bufs[MAX_POOLS];
 	int count;
 	size_t next_size;
 } pools;
+
+static struct {
+	Node *first;
+	Node *head;
+	Node **prev;
+} nodes;
 
 /* define */
 void
@@ -34,7 +42,7 @@ mem_init(size_t size)
 {
 	pools.count = 0;
 
-	new_pool(size);
+	nodes.first = new_pool(size);
 }
 
 void
@@ -52,26 +60,27 @@ mem_destroy(void)
 	}
 
 	pools.count = 0;
-	available = nil;
+	nodes.first = nil;
 }
 
 void *
 mem_alloc(size_t size)
 {
 	size_t nsize = pools.next_size;
-	void *ptr = seek(size);
+	Node *node = seek(size);
 
-	if (ptr)
-		return ptr;
+	if (node)
+		return node + 1;
 
 	while (nsize < size)
 		nsize *= 2;
 
-	new_pool(nsize);
+	node = new_pool(nsize);
+
+	nodes_add(node);
 
 	return mem_alloc(size);
 }
-
 
 void *
 mem_realloc(void *src, size_t size)
@@ -89,12 +98,12 @@ void
 mem_free(void *ptr)
 {
 	Node *node = NODE_OF(ptr);
-	node->next = available;
-	available = node;
+
+	nodes_add(node);
 }
 
 /* static */
-void
+Node *
 new_pool(size_t size)
 {
 	int count = pools.count;
@@ -113,60 +122,86 @@ new_pool(size_t size)
 	pools.count = count + 1;
 	pools.next_size = size * 2;
 
-	node->next = available;
-	available = node;
+	nodes_add(node);
+
+	return node;
 }
 
-void *
+Node *
 seek(size_t size)
 {
+	Node *node = nodes_rewind();
 	size_t size_found = 0;
-
-	Node *node = available;
-	Node **prev = &available;
 
 	while (node) {
 		size_found = node->size;
 
 		if (size_found == size)
-			return exact(node, prev);
+			return nodes_rmv();
 
 		if (size_found > size) {
 			if (size_found > MIN_SIZE)
-				return split(node, size, prev);
+				nodes_split(size);
 
-			return exact(node, prev);
+			return nodes_rmv();
 		}
 
-		prev = &node->next;
-		node = node->next;
+		node = nodes_next();
 	}
 
 	return nil;
 }
 
-void *
-exact(Node *node, Node **prev)
+void
+nodes_add(Node *node)
 {
-	void *addr = node + 1;
-
-	*prev = node->next;
-
-	return addr;
+	node->next = nodes.first;
+	nodes.first = node;
 }
 
-void *
-split(Node *node, size_t size, Node **prev)
+Node *
+nodes_rmv(void)
 {
-	size_t need = size + NODE_SIZE;
+	Node *head = nodes.head;
 
-	byte *ptr = (byte *)node + need;
+	nodes.head = head->next;
+	*(nodes.prev) = nodes.head;
+
+	return head;
+}
+
+Node *
+nodes_rewind(void)
+{
+	Node *node = nodes.first;
+
+	nodes.head = node;
+
+	return node;
+}
+
+Node *
+nodes_next(void)
+{
+	Node *node = nodes.head;
+
+	nodes.head = node->next;
+	nodes.prev = &node->next;
+
+	return nodes.head;
+}
+
+void
+nodes_split(size_t size)
+{
+	Node *head = nodes.head;
+	size_t need = size + NODE_SIZE;
+	char *ptr = (char *)head + need;
 	Node *new_node = (Node *)ptr;
 
-	new_node->size = node->size - need;
-	new_node->next = node->next;
+	new_node->size = head->size - need;
+	new_node->next = head->next;
 
-	*prev = new_node;
-
-	return node + 1;
+	head->size = size;
+	head->next = new_node;
 }
