@@ -8,6 +8,7 @@
 #define NODE_SIZE sizeof(Node)
 #define MIN_SIZE (NODE_SIZE + 8)
 #define NODE_OF(a) ((Node *)(a) - 1)
+#define ADDR_OF(n) ((void *)((n) + 1))
 
 typedef struct Node {
 	size_t size;
@@ -15,8 +16,11 @@ typedef struct Node {
 } Node;
 
 /* declare */
+static void copy_to(Node *dst, Node *src);
 static Node *new_pool(size_t size);
 static Node *seek(size_t size);
+static Node *expand(Node *);
+static void *relocate(Node *, size_t);
 static void nodes_add(Node *);
 static Node *nodes_rmv(void);
 static Node *nodes_rewind(void);
@@ -70,7 +74,7 @@ mem_alloc(size_t size)
 	Node *node = seek(size);
 
 	if (node)
-		return node + 1;
+		return ADDR_OF(node);
 
 	while (nsize < size)
 		nsize *= 2;
@@ -83,15 +87,26 @@ mem_alloc(size_t size)
 }
 
 void *
-mem_realloc(void *src, size_t size)
+mem_realloc(void *src, size_t new_size)
 {
-	void *dst = mem_alloc(size);
-	Node *node = NODE_OF(src);
-	size_t sz = MIN(size, node->size);
+	Node *src_node = NODE_OF(src);
+	size_t size = src_node->size;
 
-	memcpy(dst, src, sz);
+	if (size < new_size)
+		return mem_expand(src, new_size);
 
-	return dst;
+	return src;
+}
+
+void *
+mem_expand(void *src, size_t new_size)
+{
+	Node *src_node = NODE_OF(src);
+
+	if (expand(src_node))
+		return src;
+
+	return relocate(src_node, new_size);
 }
 
 void
@@ -103,6 +118,14 @@ mem_free(void *ptr)
 }
 
 /* static */
+void
+copy_to(Node *dst, Node *src)
+{
+	size_t size = MIN(src->size, dst->size);
+
+	memcpy(ADDR_OF(dst), ADDR_OF(src), size);
+}
+
 Node *
 new_pool(size_t size)
 {
@@ -147,6 +170,45 @@ seek(size_t size)
 		}
 
 		node = nodes_next();
+	}
+
+	return nil;
+}
+
+Node *
+expand(Node *node)
+{
+	size_t size = node->size;
+	char *ptr = ADDR_OF(node);
+	Node *target = (Node *)(ptr + size);
+	Node *head = nodes_rewind();
+
+	while (head) {
+		if (head == target) {
+			node->size += head->size + NODE_SIZE;
+
+			nodes_rmv();
+
+			return node;
+		}
+
+		head = nodes_next();
+	}
+
+	return nil;
+}
+
+void *
+relocate(Node *src_node, size_t new_size)
+{
+	Node *dst_node = seek(new_size);
+
+	if (dst_node) {
+		copy_to(dst_node, src_node);
+
+		nodes_add(src_node);
+
+		return ADDR_OF(dst_node);
 	}
 
 	return nil;
