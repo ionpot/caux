@@ -19,8 +19,9 @@ typedef struct Node {
 static void copy_to(Node *dst, Node *src);
 static Node *new_pool(size_t size);
 static Node *seek(size_t size);
-static Node *expand(Node *);
+static Node *expand(Node *, size_t);
 static void *relocate(Node *, size_t);
+static Node *successor_of(Node *);
 static void nodes_add(Node *);
 static Node *nodes_rmv(void);
 static Node *nodes_rewind(void);
@@ -103,7 +104,7 @@ mem_expand(void *src, size_t new_size)
 {
 	Node *src_node = NODE_OF(src);
 
-	if (expand(src_node))
+	if (expand(src_node, new_size))
 		return src;
 
 	return relocate(src_node, new_size);
@@ -176,26 +177,24 @@ seek(size_t size)
 }
 
 Node *
-expand(Node *node)
+expand(Node *node, size_t new_size)
 {
-	size_t size = node->size;
-	char *ptr = ADDR_OF(node);
-	Node *target = (Node *)(ptr + size);
-	Node *head = nodes_rewind();
+	Node *next = nil;
 
-	while (head) {
-		if (head == target) {
-			node->size += head->size + NODE_SIZE;
+	while (node->size < new_size) {
+		next = successor_of(node);
+
+		if (next) {
+			node->size += next->size + NODE_SIZE;
 
 			nodes_rmv();
 
-			return node;
+		} else {
+			return nil;
 		}
-
-		head = nodes_next();
 	}
 
-	return nil;
+	return node;
 }
 
 void *
@@ -209,6 +208,23 @@ relocate(Node *src_node, size_t new_size)
 		nodes_add(src_node);
 
 		return ADDR_OF(dst_node);
+	}
+
+	return nil;
+}
+
+Node *
+successor_of(Node *node)
+{
+	char *ptr = ADDR_OF(node);
+	Node *target = (Node *)(ptr + node->size);
+	Node *head = nodes_rewind();
+
+	while (head) {
+		if (head == target)
+			return head;
+
+		head = nodes_next();
 	}
 
 	return nil;
