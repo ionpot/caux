@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "def.h"
 #include "mem.h"
@@ -62,14 +63,19 @@ str_put(Str *s, const char *chars)
 }
 
 void
-str_putf(Str *s, const char *fmt, void *arg)
+str_putf(Str *s, const char *fmt, ...)
 {
 	int rem = remaining(s);
 
 	if (!rem)
 		return;
 
-	int w = snprintf(get_buf(s), (size_t)rem, fmt, arg);
+	va_list args;
+	va_start(args, fmt);
+
+	int w = vsnprintf(get_buf(s), (size_t)rem, fmt, args);
+
+	va_end(args);
 
 	if ((w + 1) < rem)
 		s->length += w;

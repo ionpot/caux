@@ -13,7 +13,7 @@ void str_clear(Str *);
 
 void str_ch(Str *, char ch);
 void str_put(Str *, const char *str);
-void str_putf(Str *, const char *fmt, void *arg);
+void str_putf(Str *, const char *fmt, ...);
 void str_concat(Str *, const Str *src);
 void str_echo(Str *);
 
