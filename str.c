@@ -6,16 +6,16 @@
 #include "str.h"
 
 /* declare */
-static size_t remaining(Str *);
+static int remaining(Str *);
 static char *get_buf(Str *);
 static void concat(Str *, const Str *src);
 static void expand(Str *);
 
 /* define */
 void
-str_init(Str *s, size_t size)
+str_init(Str *s, int size)
 {
-	s->buf = mem_alloc(size);
+	s->buf = mem_alloc((size_t)size);
 	s->size = size;
 	s->length = 0;
 }
@@ -39,7 +39,7 @@ str_clear(Str *s)
 void
 str_ch(Str *s, char b)
 {
-	size_t len = s->length;
+	int len = s->length;
 
 	if (len == s->size)
 		expand(s);
@@ -64,14 +64,13 @@ str_put(Str *s, const char *chars)
 void
 str_putf(Str *s, const char *fmt, void *arg)
 {
-	size_t rem = remaining(s);
-	int w;
+	int rem = remaining(s);
 
 	if (!rem) {
 		goto exp;
 	}
 
-	w = snprintf(get_buf(s), rem, fmt, arg);
+	int w = snprintf(get_buf(s), (size_t)rem, fmt, arg);
 
 	if ((w + 1) < rem) {
 		s->length += w;
@@ -100,11 +99,11 @@ str_concat(Str *s, const Str *src)
 void
 str_echo(Str *s)
 {
-	fwrite(s->buf, 1, s->length, stdout);
+	fwrite(s->buf, (size_t)1, (size_t)s->length, stdout);
 }
 
 /* static */
-size_t
+int
 remaining(Str *s)
 {
 	if (s->length < s->size)
@@ -123,8 +122,8 @@ void
 concat(Str *s, const Str *src)
 {
 	char *buf = get_buf(s);
-	size_t len = src->length;
-	size_t i = 0;
+	int len = src->length;
+	int i = 0;
 
 	while (i < len) {
 		buf[i] = src->buf[i];
@@ -138,8 +137,8 @@ concat(Str *s, const Str *src)
 void
 expand(Str *s)
 {
-	size_t sz = s->size * 2;
+	int sz = s->size * 2;
 
-	s->buf = mem_realloc(s->buf, sz);
+	s->buf = mem_realloc(s->buf, (size_t)sz);
 	s->size = sz;
 }

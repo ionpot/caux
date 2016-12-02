@@ -3,11 +3,11 @@
 
 typedef struct {
 	char *buf;
-	size_t size;
-	size_t length;
+	int size;
+	int length;
 } Str;
 
-void str_init(Str *, size_t size);
+void str_init(Str *, int size);
 void str_free(Str *);
 void str_clear(Str *);
 
