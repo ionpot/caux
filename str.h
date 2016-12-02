@@ -9,7 +9,7 @@ typedef struct {
 
 void str_init(Str *, size_t size);
 void str_free(Str *);
-void str_reset(Str *);
+void str_clear(Str *);
 
 void str_ch(Str *, char ch);
 void str_put(Str *, const char *str);
