@@ -9,7 +9,6 @@
 static int remaining(Str *);
 static char *get_buf(Str *);
 static void concat(Str *, const Str *src);
-static void expand(Str *);
 
 /* define */
 void
@@ -41,11 +40,10 @@ str_ch(Str *s, char b)
 {
 	int len = s->length;
 
-	if (len == s->size)
-		expand(s);
-
-	s->buf[len] = b;
-	s->length = len + 1;
+	if (len < s->size) {
+		s->buf[len] = b;
+		s->length = len + 1;
+	}
 }
 
 void
@@ -66,34 +64,20 @@ str_putf(Str *s, const char *fmt, void *arg)
 {
 	int rem = remaining(s);
 
-	if (!rem) {
-		goto exp;
-	}
+	if (!rem)
+		return;
 
 	int w = snprintf(get_buf(s), (size_t)rem, fmt, arg);
 
-	if ((w + 1) < rem) {
+	if ((w + 1) < rem)
 		s->length += w;
-
-		return;
-	}
-exp:
-	expand(s);
-
-	str_putf(s, fmt, arg);
 }
 
 void
 str_concat(Str *s, const Str *src)
 {
-	if (src->length < remaining(s)) {
+	if (src->length < remaining(s))
 		concat(s, src);
-
-	} else {
-		expand(s);
-
-		str_concat(s, src);
-	}
 }
 
 void
@@ -132,13 +116,4 @@ concat(Str *s, const Str *src)
 	}
 
 	s->length += len;
-}
-
-void
-expand(Str *s)
-{
-	int sz = s->size * 2;
-
-	s->buf = mem_realloc(s->buf, (size_t)sz);
-	s->size = sz;
 }
