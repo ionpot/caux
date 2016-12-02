@@ -38,7 +38,7 @@ str_clear(Str *s)
 	s->length = 0;
 }
 
-void
+int
 str_ch(Str *s, char b)
 {
 	int len = s->length;
@@ -46,10 +46,14 @@ str_ch(Str *s, char b)
 	if (len < s->size) {
 		s->buf[len] = b;
 		s->length = len + 1;
+
+		return 1;
 	}
+
+	return 0;
 }
 
-void
+int
 str_put(Str *s, const char *chars)
 {
 	int i = 0;
@@ -58,17 +62,21 @@ str_put(Str *s, const char *chars)
 	while (c != '\0') {
 		str_ch(s, c);
 
-		c = chars[++i];
+		c = chars[i];
+
+		i += 1;
 	}
+
+	return i;
 }
 
-void
+int
 str_putf(Str *s, const char *fmt, ...)
 {
 	int rem = remaining(s);
 
 	if (!rem)
-		return;
+		return -1;
 
 	va_list args;
 	va_start(args, fmt);
@@ -77,15 +85,25 @@ str_putf(Str *s, const char *fmt, ...)
 
 	va_end(args);
 
-	if ((w + 1) < rem)
+	if ((w + 1) < rem) {
 		s->length += w;
+
+		return 0;
+	}
+
+	return -1;
 }
 
-void
+int
 str_concat(Str *s, const Str *src)
 {
-	if (src->length < remaining(s))
+	if (src->length < remaining(s)) {
 		concat(s, src);
+
+		return 0;
+	}
+
+	return -1;
 }
 
 void
