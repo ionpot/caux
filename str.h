@@ -7,7 +7,7 @@ typedef struct {
 	int length;
 } Str;
 
-void str_init(Str *, int size);
+int str_init(Str *, int size);
 void str_free(Str *);
 void str_clear(Str *);
 

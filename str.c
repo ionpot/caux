@@ -11,12 +11,14 @@ static char *get_buf(Str *);
 static void concat(Str *, const Str *src);
 
 /* define */
-void
+int
 str_init(Str *s, int size)
 {
 	s->buf = mem_alloc((size_t)size);
 	s->size = size;
 	s->length = 0;
+
+	return s->buf ? 0 : -1;
 }
 
 void

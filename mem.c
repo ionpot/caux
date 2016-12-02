@@ -42,12 +42,14 @@ static struct {
 } nodes;
 
 /* define */
-void
+int
 mem_init(size_t size)
 {
 	pools.count = 0;
 
 	nodes.first = new_pool(size);
+
+	return nodes.first ? 0 : -1;
 }
 
 void
@@ -81,6 +83,9 @@ mem_alloc(size_t size)
 		nsize *= 2;
 
 	node = new_pool(nsize);
+
+	if (node == nil)
+		return nil;
 
 	nodes_add(node);
 
@@ -137,7 +142,7 @@ new_pool(size_t size)
 		node = malloc(size);
 
 	if (node == nil)
-		exit(0);
+		return nil;
 
 	node->size = size - NODE_SIZE;
 	node->next = nil;

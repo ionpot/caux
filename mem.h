@@ -1,7 +1,7 @@
 #ifndef MEM_H
 #define MEM_H
 
-void mem_init(size_t size);
+int mem_init(size_t size);
 void mem_destroy(void);
 void *mem_alloc(size_t size);
 void *mem_realloc(void *ptr, size_t size);
