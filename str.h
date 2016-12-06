@@ -16,8 +16,9 @@ int str_put(Str *, const char *str);
 int str_putf(Str *, const char *fmt, ...);
 int str_concat(Str *, const Str *src);
 
-void str_echo(Str *);
-
 int str_read(Str *, FILE *);
+int str_write(Str *, FILE *);
+
+void str_echo(Str *);
 
 #endif

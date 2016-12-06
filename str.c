@@ -106,12 +106,6 @@ str_concat(Str *s, const Str *src)
 	return -1;
 }
 
-void
-str_echo(Str *s)
-{
-	fwrite(s->buf, (size_t)1, (size_t)s->length, stdout);
-}
-
 int
 str_read(Str *s, FILE *f)
 {
@@ -120,6 +114,20 @@ str_read(Str *s, FILE *f)
 	s->length = i;
 
 	return (i < s->size);
+}
+
+int
+str_write(Str *s, FILE *f)
+{
+	int i = fwrite(s->buf, (size_t)1, (size_t)s->length, f);
+
+	return (i == s->length);
+}
+
+void
+str_echo(Str *s)
+{
+	str_write(s, stdout);
 }
 
 /* static */
