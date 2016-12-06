@@ -109,7 +109,7 @@ str_concat(Str *s, const Str *src)
 int
 str_read(Str *s, FILE *f)
 {
-	int i = fread(s->buf, (size_t)1, (size_t)s->size, f);
+	int i = (int)fread(s->buf, (size_t)1, (size_t)s->size, f);
 
 	s->length = i;
 
@@ -119,7 +119,7 @@ str_read(Str *s, FILE *f)
 int
 str_write(Str *s, FILE *f)
 {
-	int i = fwrite(s->buf, (size_t)1, (size_t)s->length, f);
+	int i = (int)fwrite(s->buf, (size_t)1, (size_t)s->length, f);
 
 	return (i == s->length);
 }
