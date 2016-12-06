@@ -112,6 +112,16 @@ str_echo(Str *s)
 	fwrite(s->buf, (size_t)1, (size_t)s->length, stdout);
 }
 
+int
+str_read(Str *s, FILE *f)
+{
+	int i = fread(s->buf, (size_t)1, (size_t)s->size, f);
+
+	s->length = i;
+
+	return (i < s->size);
+}
+
 /* static */
 int
 remaining(Str *s)

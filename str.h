@@ -18,4 +18,6 @@ int str_concat(Str *, const Str *src);
 
 void str_echo(Str *);
 
+int str_read(Str *, FILE *);
+
 #endif
