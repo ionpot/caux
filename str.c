@@ -116,7 +116,7 @@ str_read(Str *s, FILE *f)
 
 	s->length = i;
 
-	return (i < s->size);
+	return (i == s->size);
 }
 
 int
