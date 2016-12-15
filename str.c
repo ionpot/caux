@@ -25,9 +25,12 @@ str_init(Str *s, int size)
 void
 str_free(Str *s)
 {
-	mem_free(s->buf);
+	if (s->buf) {
+		mem_free(s->buf);
 
-	s->buf = nil;
+		s->buf = nil;
+	}
+
 	s->size = 0;
 	s->length = 0;
 }
