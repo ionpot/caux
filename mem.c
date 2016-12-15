@@ -259,6 +259,7 @@ nodes_rewind(void)
 	Node *node = nodes.first;
 
 	nodes.head = node;
+	nodes.prev = &node;
 
 	return node;
 }
