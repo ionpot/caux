@@ -124,7 +124,7 @@ str_write(Str *s, FILE *f)
 {
 	int i = (int)fwrite(s->buf, (size_t)1, (size_t)s->length, f);
 
-	return (i == s->length);
+	return (s->length - i);
 }
 
 void
