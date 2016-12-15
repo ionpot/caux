@@ -3,10 +3,6 @@
 
 #include <stddef.h>
 
-#ifndef NDEBUG
-#define DEBUG
-#endif
-
 #define nil NULL
 
 #define ASC(x, y, z) (((x) <= (y)) && ((y) <= (z)))
