@@ -1,159 +1,140 @@
+#include "mem.h"
+
+#include "bfr.h"
+#include "bfr_r.h"
+#include "err.h"
+#include "dlink.h"
+#include "num.h"
+
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "def.h"
-#include "mem.h"
+#define MIN_SIZE 8
 
-#define MAX_POOLS 32
-#define NODE_SIZE sizeof(Node)
-#define MIN_SIZE (NODE_SIZE + 8)
-#define NODE_OF(a) ((Node *)(a) - 1)
-#define ADDR_OF(n) ((void *)((n) + 1))
+static MemSec * new_section(size_t);
 
-typedef struct Node {
-	size_t size;
-	struct Node *next;
-} Node;
-
-/* declare */
-static void copy_to(Node *dst, Node *src);
-static Node *new_pool(size_t size);
-static Node *seek(size_t size);
-static Node *expand(Node *, size_t);
-static void *relocate(Node *, size_t);
-static Node *successor_of(Node *);
-static void nodes_add(Node *);
-static Node *nodes_rmv(void);
-static Node *nodes_rewind(void);
-static Node *nodes_next(void);
-static void nodes_split(size_t size);
-
-/* local */
-static struct {
-	void *bufs[MAX_POOLS];
-	int count;
-	size_t next_size;
-} pools;
-
-static struct {
-	Node *first;
-	Node *head;
-	Node **prev;
-} nodes;
-
-/* define */
 int
-mem_init(size_t size)
+mem_init(Mem *mem, size_t size)
 {
-	pools.count = 0;
+	assert(size > MIN_SIZE);
 
-	nodes.first = new_pool(size);
+	MemSec *sec = new_section(total);
 
-	return nodes.first ? 0 : -1;
+	nil_ret(sec, -1);
+
+	dlink_init(&sec->link);
+
+	sec->next_a->next = nil;
+
+	mem->head = sec;
+	mem->tail = sec;
+	mem->avlb = sec;
+
+	return 0;
 }
 
 void
-mem_destroy(void)
+mem_destroy(Mem *mem)
 {
-	int i = pools.count;
-	void **bufs = pools.bufs;
+	MemSec *a = mem->head;
+	MemSec *b;
 
-	while (i > 0) {
-		i -= 1;
+	while (a) {
+		b = next_section(a);
 
-		free(bufs[i]);
+		free(a);
 
-		bufs[i] = nil;
+		a = b;
 	}
 
-	pools.count = 0;
-	nodes.first = nil;
+	mem->head = nil;
+	mem->tail = nil;
+	mem->avlb = nil;
 }
 
 void *
-mem_alloc(size_t size)
+mem_next(Mem *mem, size_t size)
 {
-	size_t nsize = pools.next_size;
-	Node *node = seek(size);
+	MemSec *avlb = mem->avlb;
+	BfrR *rdr = &avlb->rdr;
 
-	if (node)
-		return ADDR_OF(node);
+	if (bfrr_has(rdr, size)) {
+		return bfrr_read(rdr, size);
+	}
 
-	while (nsize < size)
-		nsize *= 2;
+	int e = add_section(mem);
 
-	node = new_pool(nsize);
+	err_ret(e, nil);
 
-	if (node == nil)
-		return nil;
-
-	nodes_add(node);
-
-	return mem_alloc(size);
+	return mem_next(mem, size);
 }
 
-void *
-mem_realloc(void *src, size_t new_size)
+static MemSec *
+new_section(size_t size)
 {
-	Node *src_node = NODE_OF(src);
-	size_t size = src_node->size;
+	size_t total = sizeof(MemSec) + size;
+	MemSec *sec = malloc(total);
 
-	if (size < new_size)
-		return mem_expand(src, new_size);
+	nil_jmp(sec, end);
 
-	return src;
+	bfr_init(&sec->bfr, size, sec + 1);
+	bfrr_init(&sec->rdr, &sec->bfr);
+end:
+	return sec;
 }
 
-void *
-mem_expand(void *src, size_t new_size)
+static int
+add_section(Mem *mem)
 {
-	Node *src_node = NODE_OF(src);
+	assert(mem->tail != nil);
+	assert(mem->avlb != nil);
 
-	if (expand(src_node, new_size))
-		return src;
+	MemSec *tail = mem->tail;
+	size_t size = tail->bfr.size;
+	MemSec *sec = new_section(size);
+	MemSec *avlb = mem->avlb;
 
-	return relocate(src_node, new_size);
+	dlink_set(&tail->link, &sec->link);
+
+	if (bfrr_at_end(&avlb->rdr)) {
+		avlb = next_avlb(avlb);
+
+		mem->avlb = avlb;
+	}
+
+	if (avlb) {
+		link_set(&avlb->next_a, &sec->next_a);
+
+	} else {
+		mem->avlb = sec;
+	}
 }
 
-void
-mem_free(void *ptr)
+static MemSec *
+next_section(MemSec *sec)
 {
-	Node *node = NODE_OF(ptr);
+	DLink *next = sec->link.next;
 
-	nodes_add(node);
+	return container_of(next, MemSec, link);
 }
 
 /* static */
-void
-copy_to(Node *dst, Node *src)
-{
-	size_t size = MIN(src->size, dst->size);
-
-	memcpy(ADDR_OF(dst), ADDR_OF(src), size);
-}
-
-Node *
+int
 new_pool(size_t size)
 {
-	int count = pools.count;
-	Node *node = nil;
+	addr *pool = mem_alloc(OVERHEAD + size);
+	Head *head = (Head *)(pool + 1);
 
-	if (count < MAX_POOLS)
-		node = malloc(size);
+	err_nil(pool, "new_pool(%ul) failed.", size);
 
-	if (node == nil)
-		return nil;
+	init_head(head, size);
 
-	node->size = size - NODE_SIZE;
-	node->next = nil;
+	add_pool(pool);
 
-	pools.bufs[count] = node;
-	pools.count = count + 1;
-	pools.next_size = size * 2;
-
-	nodes_add(node);
-
-	return node;
+	return 0;
+error:
+	return -1;
 }
 
 Node *
@@ -165,12 +146,14 @@ seek(size_t size)
 	while (node) {
 		size_found = node->size;
 
-		if (size_found == size)
+		if (size_found == size) {
 			return nodes_rmv();
+		}
 
 		if (size_found > size) {
-			if (size_found > MIN_SIZE)
+			if (size_found > MIN_SIZE) {
 				nodes_split(size);
+			}
 
 			return nodes_rmv();
 		}
@@ -190,7 +173,7 @@ expand(Node *node, size_t new_size)
 		next = successor_of(node);
 
 		if (next) {
-			node->size += next->size + NODE_SIZE;
+			node->size += next->size + sizeof(Node);
 
 			nodes_rmv();
 
@@ -226,8 +209,9 @@ successor_of(Node *node)
 	Node *head = nodes_rewind();
 
 	while (head) {
-		if (head == target)
+		if (head == target) {
 			return head;
+		}
 
 		head = nodes_next();
 	}
@@ -236,10 +220,19 @@ successor_of(Node *node)
 }
 
 void
+nodes_clr(void)
+{
+	nodes.first = nil;
+	nodes.head = nil;
+	nodes.prev = nil;
+}
+
+void
 nodes_add(Node *node)
 {
-	node->next = nodes.first;
-	nodes.first = node;
+	addr_put(node, nodes);
+
+	nodes = node;
 }
 
 Node *
@@ -248,7 +241,7 @@ nodes_rmv(void)
 	Node *head = nodes.head;
 
 	nodes.head = head->next;
-	*(nodes.prev) = nodes.head;
+	*nodes.prev = nodes.head;
 
 	return head;
 }
@@ -279,7 +272,7 @@ void
 nodes_split(size_t size)
 {
 	Node *head = nodes.head;
-	size_t need = size + NODE_SIZE;
+	size_t need = size + sizeof(Node);
 	char *ptr = (char *)head + need;
 	Node *new_node = (Node *)ptr;
 

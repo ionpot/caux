@@ -5,8 +5,18 @@
 
 #define nil NULL
 
-#define WRAP(x) do { x } while (0)
+#define DOWL(x) \
+	do { x } while (0)
 
-typedef unsigned char byte;
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER) \
+	((size_t) &((TYPE *)0)->MEMBER)
+#endif
+
+#define container_of(PTR, TYPE, MEMBER) \
+	((TYPE *)((char *)(1 ? PTR : &((TYPE *)0)->MEMBER)\
+	- offsetof(TYPE, MEMBER)))
+
+typedef size_t uint;
 
 #endif

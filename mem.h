@@ -1,11 +1,24 @@
 #ifndef MEM_H
 #define MEM_H
 
-int mem_init(size_t size);
-void mem_destroy(void);
-void *mem_alloc(size_t size);
-void *mem_realloc(void *ptr, size_t size);
-void *mem_expand(void *ptr, size_t new_size);
-void mem_free(void *ptr);
+#include "def.h"
+
+typedef struct {
+	DLink link;
+	Link next_a;
+	BfrR rdr;
+	Bfr bfr;
+} MemSec;
+
+typedef struct {
+	MemSec *head;
+	MemSec *tail;
+	MemSec *avlb;
+} Mem;
+
+int mem_init(Mem *, size_t);
+void mem_destroy(Mem *);
+
+void * mem_next(Mem *, size_t);
 
 #endif
