@@ -29,14 +29,16 @@ HFILES := $(wildcard $(IDIR)/*.h)
 CFILES := $(wildcard $(SDIR)/*.c)
 OFILES := $(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(CFILES))
 
-.PHONY: all
-all: $(ODIR)/ $(OFILES)
-
-$(ODIR)/:
-	mkdir $@
-
 $(ODIR)/%.o: $(SDIR)/%.c $(HFILES)
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+.PHONY: all
+all: $(OFILES)
+
+$(OFILES): | $(ODIR)
+
+$(ODIR):
+	mkdir $@
 
 .PHONY: info
 info:
