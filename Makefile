@@ -1,3 +1,5 @@
+OUT := libcaux.a
+
 SHELL := sh
 OS := $(shell uname)
 MINGW := /c/MinGW
@@ -33,7 +35,10 @@ $(ODIR)/%.o: $(SDIR)/%.c | $(DDIR)
 	$(COMPILE) -o $@ -c $<
 
 .PHONY: all
-all: $(OFILES)
+all: $(OUT)
+
+$(OUT): $(OFILES)
+	$(AR) rcs $@ $^
 
 $(OFILES): | $(ODIR)
 
@@ -47,4 +52,4 @@ $(DDIR):
 
 .PHONY: clean
 clean:
-	rm -rf $(ODIR) $(DDIR)
+	rm -rf $(ODIR) $(DDIR) $(OUT)
