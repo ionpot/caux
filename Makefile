@@ -1,15 +1,20 @@
-CC := gcc
-CFLAGS := -march=native -Wall -Wextra
-OS := $(shell uname)
 SHELL := sh
-
-IDIR := ./include
-SDIR := ./src
-ODIR := ./obj
-
+OS := $(shell uname)
 MINGW := /c/MinGW
 
-IDIRS := $(IDIR)
+IDIR := include
+SDIR := src
+ODIR := obj
+DDIR := dep
+
+DFILE = $(DDIR)/$*.d
+
+CC := gcc
+CFLAGS := -march=native -Wall -Wextra
+DFLAGS = -MT "$@ $(DFILE)" -MMD -MP -MF $(DFILE)
+COMPILE = $(CC) $(CFLAGS) $(DFLAGS)
+
+IDIRS := ./$(IDIR)
 LDIRS :=
 
 ifneq (,$(findstring MINGW,$(OS)))
@@ -17,20 +22,15 @@ ifneq (,$(findstring MINGW,$(OS)))
 	LDIRS += $(MINGW)/lib
 endif
 
-ifneq (,$(IDIRS))
-	CFLAGS += $(patsubst %,-I%,$(IDIRS))
-endif
+CFLAGS += $(patsubst %,-I%,$(IDIRS))
+CFLAGS += $(patsubst %,-L%,$(LDIRS))
 
-ifneq (,$(LDIRS))
-	CFLAGS += $(patsubst %,-L%,$(LDIRS))
-endif
-
-HFILES := $(wildcard $(IDIR)/*.h)
 CFILES := $(wildcard $(SDIR)/*.c)
+DFILES := $(patsubst $(SDIR)/%.c,$(DDIR)/%.d,$(CFILES))
 OFILES := $(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(CFILES))
 
-$(ODIR)/%.o: $(SDIR)/%.c $(HFILES)
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(ODIR)/%.o: $(SDIR)/%.c | $(DDIR)
+	$(COMPILE) -o $@ -c $<
 
 .PHONY: all
 all: $(OFILES)
@@ -38,16 +38,13 @@ all: $(OFILES)
 $(OFILES): | $(ODIR)
 
 $(ODIR):
-	mkdir $@
+	mkdir $(ODIR)
 
-.PHONY: info
-info:
-	@echo "OS: $(OS)"
-	@echo "HEADERS: $(HFILES)"
-	@echo "SOURCES: $(CFILES)"
-	@echo "OBJECTS: $(OFILES)"
-	@echo "COMPILE: $(CC) $(CFLAGS)"
+$(DDIR):
+	mkdir $(DDIR)
+
+-include $(DFILES)
 
 .PHONY: clean
 clean:
-	rm -rf $(ODIR)
+	rm -rf $(ODIR) $(DDIR)
