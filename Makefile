@@ -9,11 +9,16 @@ SDIR := src
 ODIR := obj
 DDIR := dep
 
+SPAT = $(SDIR)/%.c
+DPAT = $(DDIR)/%.d
+OPAT = $(ODIR)/%.o
+
 DFILE = $(DDIR)/$*.d
+OFILE = $(ODIR)/$*.o
 
 CC := gcc
 CFLAGS := -march=native -Wall -Wextra
-DFLAGS = -MT "$@ $(DFILE)" -MMD -MP -MF $(DFILE)
+DFLAGS = -MT "$(OFILE) $(DFILE)" -MMD -MP -MF $(DFILE)
 COMPILE = $(CC) $(CFLAGS) $(DFLAGS)
 
 IDIRS := ./$(IDIR)
@@ -28,11 +33,11 @@ CFLAGS += $(IDIRS:%=-I%)
 CFLAGS += $(LDIRS:%=-L%)
 
 CFILES := $(wildcard $(SDIR)/*.c)
-DFILES := $(CFILES:$(SDIR)/%.c=$(DDIR)/%.d)
-OFILES := $(CFILES:$(SDIR)/%.c=$(ODIR)/%.o)
+DFILES := $(CFILES:$(SPAT)=$(DPAT))
+OFILES := $(CFILES:$(SPAT)=$(OPAT))
 
-$(ODIR)/%.o: $(SDIR)/%.c | $(DDIR)
-	$(COMPILE) -o $@ -c $<
+$(OPAT) $(DPAT): $(SPAT)
+	$(COMPILE) -o $(OFILE) -c $<
 
 .PHONY: all
 all: $(OUT)
@@ -40,6 +45,7 @@ all: $(OUT)
 $(OUT): $(OFILES)
 	$(AR) rcs $@ $^
 
+$(DFILES): | $(DDIR)
 $(OFILES): | $(ODIR)
 
 $(ODIR):
