@@ -24,12 +24,12 @@ ifneq (,$(findstring MINGW,$(OS)))
 	LDIRS += $(MINGW)/lib
 endif
 
-CFLAGS += $(patsubst %,-I%,$(IDIRS))
-CFLAGS += $(patsubst %,-L%,$(LDIRS))
+CFLAGS += $(IDIRS:%=-I%)
+CFLAGS += $(LDIRS:%=-L%)
 
 CFILES := $(wildcard $(SDIR)/*.c)
-DFILES := $(patsubst $(SDIR)/%.c,$(DDIR)/%.d,$(CFILES))
-OFILES := $(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(CFILES))
+DFILES := $(CFILES:$(SDIR)/%.c=$(DDIR)/%.d)
+OFILES := $(CFILES:$(SDIR)/%.c=$(ODIR)/%.o)
 
 $(ODIR)/%.o: $(SDIR)/%.c | $(DDIR)
 	$(COMPILE) -o $@ -c $<
