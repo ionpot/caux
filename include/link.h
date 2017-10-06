@@ -7,7 +7,7 @@ typedef struct Link {
 
 void link_init(Link *);
 
-void link_set(Link *, Link *);
-void link_unset(Link *, Link *);
+void link_set(Link *, Link *prev);
+void link_unset(Link *, Link *prev);
 
 #endif
