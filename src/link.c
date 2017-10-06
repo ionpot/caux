@@ -2,6 +2,8 @@
 
 #include "def.h"
 
+#include <assert.h>
+
 void
 link_init(Link *ln)
 {
@@ -11,6 +13,8 @@ link_init(Link *ln)
 void
 link_set(Link *ln, Link *prev)
 {
+	assert(prev != NULL);
+
 	ln->next = prev->next;
 	prev->next = ln;
 }
@@ -18,5 +22,7 @@ link_set(Link *ln, Link *prev)
 void
 link_unset(Link *ln, Link *prev)
 {
+	assert(prev != NULL);
+
 	prev->next = ln->next;
 }
