@@ -1,7 +1,6 @@
 #ifndef MEM_H
 #define MEM_H
 
-#include "caux.h"
 #include "def.h"
 #include "memnode.h"
 
@@ -9,8 +8,8 @@ typedef struct {
 	size_t expansion;
 	MemNode *first;
 	MemNode *last;
-	MemNode *first_av;
-	MemNode *last_av;
+	MemNode *first_avlb;
+	MemNode *last_avlb;
 } Mem;
 
 caux mem_init(Mem *, size_t initial);

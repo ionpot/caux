@@ -11,11 +11,19 @@
 	((size_t) &((TYPE *)0)->MEMBER)
 #endif
 
-#define container_of(PTR, TYPE, MEMBER) \
+#define struct_of(PTR, TYPE, MEMBER) \
 	((TYPE *)((char *)(1 ? PTR : &((TYPE *)0)->MEMBER)\
 	- offsetof(TYPE, MEMBER)))
 
+#define jump_if_null(PTR, LABEL) DOWL(\
+	if ((PTR) == NULL) goto LABEL;)
+
 typedef unsigned char byte;
 typedef size_t uint;
+
+typedef enum {
+	CAUX_OK,
+	CAUX_NO_MEM
+} caux;
 
 #endif

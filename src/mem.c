@@ -29,12 +29,59 @@ add_node_next(Mem *mem, size_t request)
 {
 	MemNode *node = add_node(mem, request);
 
-	return node
-		? memnode_next(node, request)
-		: NULL;
+	return (node == NULL)
+		? NULL
+		: memnode_next(node, request);
 }
 
-status
+static void
+set_unavlb(Mem *mem, MemNode *node, MemNode *prev)
+{
+	MemNode *next = NULL;
+
+	if (node == mem->first_avlb) {
+		next = memnode_next_avlb(node);
+
+		if (node == mem->last_avlb) {
+			mem->last_avlb = next;
+		}
+
+		mem->first_avlb = next;
+
+	} else {
+		assert(prev != NULL);
+
+		memnode_set_unavlb(node, prev);
+	}
+}
+
+static void *
+find_space(Mem *mem, size_t request)
+{
+	MemNode *node = mem->first_avlb;
+	MemNode *prev = NULL;
+	void *found = NULL;
+
+	while (node != NULL) {
+		found = memnode_alloc(node, request);
+
+		if (found != NULL) {
+			if (memnode_is_full(node)) {
+				set_unavlb(mem, node, prev);
+			}
+
+			break;
+		}
+
+		prev = node;
+		node = memnode_next_avlb(node);
+	}
+
+	return found;
+}
+
+/* export */
+caux
 mem_init(Mem *mem, size_t initial)
 {
 	assert(initial > sizeof(MemNode));
@@ -49,10 +96,10 @@ mem_init(Mem *mem, size_t initial)
 	mem->first_av = node;
 	mem->last_av = node;
 
-	return STATUS_OK;
+	return CAUX_OK;
 
 no_mem:
-	return STATUS_NO_MEM;
+	return CAUX_NO_MEM;
 }
 
 void
@@ -76,9 +123,9 @@ mem_next(Mem *mem, size_t request)
 {
 	assert(request > 0);
 
-	void *next = memnode_next(mem->first_av, request);
+	void *found = find_space(mem, request);
 
-	return (next == NULL)
+	return (found == NULL)
 		? add_node_next(mem, request)
-		: next;
+		: found;
 }
