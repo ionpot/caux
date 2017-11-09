@@ -5,6 +5,9 @@
 static void
 append(Mem *mem, MemNode *node)
 {
+	assert(mem != NULL);
+	assert(node != NULL);
+
 	MemNode *last = mem->last;
 	MemNode *last_av = mem->last_av;
 
@@ -15,6 +18,8 @@ append(Mem *mem, MemNode *node)
 static MemNode *
 add_node(Mem *mem, size_t request)
 {
+	assert(mem != NULL);
+
 	MemNode *node = memnode_alloc(mem->expansion);
 
 	if (node != NULL) {
@@ -80,13 +85,41 @@ find_space(Mem *mem, size_t request)
 	return found;
 }
 
+static void
+free_all(MemNode *node)
+{
+	if (node == NULL)
+		return;
+
+	Link link = link_try_next(&node->next);
+
+	free(node);
+
+	if (link != NULL)
+		free_all(struct_of(link, MemNode, next));
+}
+
+static MemNode *
+try_alloc(size_t size)
+{
+	if (size < MIN_NODE_SIZE)
+		return NULL;
+
+	MemNode *node = malloc(size + sizeof(MemNode));
+
+	return (node == NULL)
+		? try_alloc(size >> 1)
+		: node;
+}
+
 /* export */
 caux
 mem_init(Mem *mem, size_t initial)
 {
-	assert(initial > sizeof(MemNode));
+	assert(mem != NULL);
+	assert(initial > MIN_NODE_SIZE);
 
-	MemNode *node = memnode_alloc(initial);
+	MemNode *node = try_alloc(initial);
 
 	jump_if_null(node, no_mem);
 
@@ -105,22 +138,15 @@ no_mem:
 void
 mem_free(Mem *mem)
 {
-	MemNode *node = mem->first;
-	Link link = first->next;
+	assert(mem != NULL);
 
-	free(node);
-
-	while (link != NULL) {
-		node = struct_of(link, MemNode, next);
-		link = link.next;
-
-		free(node);
-	}
+	free_all(mem->first);
 }
 
 void *
 mem_next(Mem *mem, size_t request)
 {
+	assert(mem != NULL);
 	assert(request > 0);
 
 	void *found = find_space(mem, request);

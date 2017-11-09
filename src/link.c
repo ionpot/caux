@@ -7,6 +7,8 @@
 void
 link_init(Link *ln)
 {
+	assert(ln != NULL);
+
 	ln->next = NULL;
 }
 
@@ -25,4 +27,20 @@ link_unset(Link *ln, Link *prev)
 	assert(prev != NULL);
 
 	prev->next = ln->next;
+}
+
+Link *
+link_next(Link *ln)
+{
+	assert(ln != NULL);
+
+	return ln->next;
+}
+
+Link *
+link_try_next(Link *ln)
+{
+	return (ln == NULL)
+		? NULL
+		: link_next(ln);
 }
