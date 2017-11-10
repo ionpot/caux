@@ -5,13 +5,14 @@
 #include "buffer.h"
 #include "bufrdr.h"
 
-typedef struct {
-	Link next;
-	Link next_avlb;
-	Buffer buffer;
-	BufRdr reader;
-} MemNode;
+struct MemNode {
+	struct MemNode *next;
+	struct MemNode *next_avlb;
+	struct Buffer buffer;
+	struct BufRdr reader;
+};
 
-MemNode * memnode_alloc(size_t *request);
+struct MemNode * memnode_alloc(size_t *request);
+bool             memnode_is_full(struct MemNode *);
 
 #endif

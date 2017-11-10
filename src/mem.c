@@ -3,24 +3,24 @@
 #include <assert.h>
 
 static void
-append(Mem *mem, MemNode *node)
+append(struct Mem *mem, struct MemNode *node)
 {
 	assert(mem != NULL);
 	assert(node != NULL);
 
-	MemNode *last = mem->last;
-	MemNode *last_av = mem->last_av;
+	struct MemNode *last = mem->last;
+	struct MemNode *last_av = mem->last_av;
 
 	link_set(&node->next, &last->next);
 	link_set(&node->next, &last_av->next);
 }
 
-static MemNode *
-add_node(Mem *mem, size_t request)
+static struct MemNode *
+add_node(struct Mem *mem, size_t request)
 {
 	assert(mem != NULL);
 
-	MemNode *node = memnode_alloc(mem->expansion);
+	struct MemNode *node = memnode_alloc(mem->expansion);
 
 	if (node != NULL) {
 		append(mem, node);
@@ -30,9 +30,9 @@ add_node(Mem *mem, size_t request)
 }
 
 static void *
-add_node_next(Mem *mem, size_t request)
+add_node_next(struct Mem *mem, size_t request)
 {
-	MemNode *node = add_node(mem, request);
+	struct MemNode *node = add_node(mem, request);
 
 	return (node == NULL)
 		? NULL
@@ -40,31 +40,30 @@ add_node_next(Mem *mem, size_t request)
 }
 
 static void
-set_unavlb(Mem *mem, MemNode *node, MemNode *prev)
+set_unavlb(struct Mem *mem, struct MemNode *node, struct MemNode *prev)
 {
-	MemNode *next = NULL;
+	struct MemNode *next = NULL;
 
 	if (node == mem->first_avlb) {
-		next = memnode_next_avlb(node);
+		next = node->next_avlb;
 
-		if (node == mem->last_avlb) {
+		if (node == mem->last_avlb)
 			mem->last_avlb = next;
-		}
 
 		mem->first_avlb = next;
 
 	} else {
-		assert(prev != NULL);
-
-		memnode_set_unavlb(node, prev);
+		link_unset_member(next_avlb, node, prev);
 	}
 }
 
 static void *
-find_space(Mem *mem, size_t request)
+find_space(struct Mem *mem, size_t request)
 {
-	MemNode *node = mem->first_avlb;
-	MemNode *prev = NULL;
+	assert(mem != NULL);
+
+	struct MemNode *node = mem->first_avlb;
+	struct MemNode *prev = NULL;
 	void *found = NULL;
 
 	while (node != NULL) {
@@ -79,33 +78,34 @@ find_space(Mem *mem, size_t request)
 		}
 
 		prev = node;
-		node = memnode_next_avlb(node);
+		node = node->next_avlb;
 	}
 
 	return found;
 }
 
 static void
-free_all(MemNode *node)
+free_nodes(struct MemNode *node)
 {
+	struct MemNode *next;
+
 	if (node == NULL)
 		return;
 
-	Link link = link_try_next(&node->next);
+	next = node->next;
 
 	free(node);
 
-	if (link != NULL)
-		free_all(struct_of(link, MemNode, next));
+	free_nodes(next);
 }
 
-static MemNode *
+static struct MemNode *
 try_alloc(size_t size)
 {
 	if (size < MIN_NODE_SIZE)
 		return NULL;
 
-	MemNode *node = malloc(size + sizeof(MemNode));
+	struct MemNode *node = malloc(size + sizeof(struct MemNode));
 
 	return (node == NULL)
 		? try_alloc(size >> 1)
@@ -113,13 +113,13 @@ try_alloc(size_t size)
 }
 
 /* export */
-caux
-mem_init(Mem *mem, size_t initial)
+enum caux
+mem_init(struct Mem *mem, size_t initial)
 {
 	assert(mem != NULL);
 	assert(initial > MIN_NODE_SIZE);
 
-	MemNode *node = try_alloc(initial);
+	struct MemNode *node = try_alloc(initial);
 
 	jump_if_null(node, no_mem);
 
@@ -136,15 +136,15 @@ no_mem:
 }
 
 void
-mem_free(Mem *mem)
+mem_destroy(struct Mem *mem)
 {
 	assert(mem != NULL);
 
-	free_all(mem->first);
+	free_nodes(mem->first);
 }
 
 void *
-mem_next(Mem *mem, size_t request)
+mem_next(struct Mem *mem, size_t request)
 {
 	assert(mem != NULL);
 	assert(request > 0);
@@ -152,6 +152,6 @@ mem_next(Mem *mem, size_t request)
 	void *found = find_space(mem, request);
 
 	return (found == NULL)
-		? add_node_next(mem, request)
+		? add_space(mem, request)
 		: found;
 }

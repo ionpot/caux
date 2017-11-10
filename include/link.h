@@ -1,16 +1,13 @@
 #ifndef LINK_H
 #define LINK_H
 
-typedef struct Link {
-	struct Link *next;
-} Link;
+#include "def.h"
 
-void link_init(Link *);
+#include <assert.h>
 
-void link_set(Link *, Link *prev);
-void link_unset(Link *, Link *prev);
-
-Link * link_next(Link *);
-Link * link_try_next(Link *);
+#define link_unset_member(MEMBER, LINK, PREV) DOWL(\
+	assert((LINK) != NULL);\
+	assert((PREV) != NULL);\
+	(PREV)->MEMBER = (LINK)->MEMBER;)
 
 #endif
