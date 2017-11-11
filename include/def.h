@@ -16,6 +16,6 @@
 	- offsetof(TYPE, MEMBER)))
 
 typedef unsigned char byte;
-typedef size_t uint;
+typedef size_t usgn;
 
 #endif

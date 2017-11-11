@@ -10,25 +10,25 @@ buffer_init(struct Buffer *buf, size_t size, void *data)
 }
 
 void *
-buffer_get(struct Buffer *buf, size_t at)
+buffer_get(struct Buffer *buf, usgn i)
 {
-	assert(at < buf->size);
+	assert(i < buf->size);
 
-	return buf->data + at;
+	return buf->data + i;
 }
 
 void
-buffer_set(struct Buffer *buf, size_t at, byte val)
+buffer_set(struct Buffer *buf, usgn i, byte val)
 {
-	byte *p = buffer_get(buf, at);
+	byte *p = buffer_get(buf, i);
 
 	*p = val;
 }
 
 int
-buffer_is_index(struct Buffer *buf, size_t index)
+buffer_is_index(struct Buffer *buf, usgn i)
 {
-	return index < buf->size;
+	return i < buf->size;
 }
 
 int
