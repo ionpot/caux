@@ -3,36 +3,36 @@
 #include <assert.h>
 
 void
-buffer_init(Buffer *buf, size_t size, void *data)
+buffer_init(struct Buffer *buf, size_t size, void *data)
 {
 	buf->size = size;
 	buf->data = data;
 }
 
 void *
-buffer_get(Buffer *buf, size_t at)
+buffer_get(struct Buffer *buf, usgn i)
 {
-	assert(at < buf->size);
+	assert(i < buf->size);
 
-	return buf->data + at;
+	return buf->data + i;
 }
 
 void
-buffer_set(Buffer *buf, size_t at, byte val)
+buffer_set(struct Buffer *buf, usgn i, byte val)
 {
-	byte *p = buffer_get(buf, at);
+	byte *p = buffer_get(buf, i);
 
 	*p = val;
 }
 
 int
-buffer_is_index(Buffer *buf, size_t index)
+buffer_is_index(struct Buffer *buf, usgn i)
 {
-	return index < buf->size;
+	return i < buf->size;
 }
 
 int
-buffer_is_size(Buffer *buf, size_t size)
+buffer_is_size(struct Buffer *buf, size_t size)
 {
 	return size <= buf->size;
 }

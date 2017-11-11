@@ -19,11 +19,11 @@
 	if ((PTR) == NULL) goto LABEL;)
 
 typedef unsigned char byte;
-typedef size_t uint;
+typedef size_t usgn;
 
-typedef enum {
-	CAUX_OK,
+enum caux {
+	CAUX_OK = 0,
 	CAUX_NO_MEM
-} caux;
+};
 
 #endif

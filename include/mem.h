@@ -4,17 +4,17 @@
 #include "def.h"
 #include "memnode.h"
 
-typedef struct {
+struct Mem {
 	size_t expansion;
-	MemNode *first;
-	MemNode *last;
-	MemNode *first_avlb;
-	MemNode *last_avlb;
-} Mem;
+	struct MemNode *first;
+	struct MemNode *last;
+	struct MemNode *first_avlb;
+	struct MemNode *last_avlb;
+};
 
-caux mem_init(Mem *, size_t initial);
-void mem_free(Mem *);
+enum caux mem_init(struct Mem *, size_t initial);
+void      mem_destroy(struct Mem *);
 
-void * mem_next(Mem *, size_t request);
+void * mem_next(struct Mem *, size_t request);
 
 #endif

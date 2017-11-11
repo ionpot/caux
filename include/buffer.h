@@ -3,17 +3,17 @@
 
 #include "def.h"
 
-typedef struct {
+struct Buffer {
 	size_t size;
-	byte *data;
-} Buffer;
+	byte * data;
+};
 
-void buffer_init(Buffer *, size_t, void *);
+void buffer_init(struct Buffer *, size_t, void *);
 
-void * buffer_get(Buffer *, size_t);
-void buffer_set(Buffer *, size_t, byte);
+void * buffer_get(struct Buffer *, usgn i);
+void   buffer_set(struct Buffer *, usgn i, byte value);
 
-int buffer_is_index(Buffer *, size_t);
-int buffer_is_size(Buffer *, size_t);
+int buffer_is_index(struct Buffer *, usgn i);
+int buffer_is_size(struct Buffer *, size_t);
 
 #endif

@@ -1,41 +1,61 @@
 #include "memnode.h"
 
-#include "def.h"
-
 #include <assert.h>
 #include <stdlib.h>
 
+#define MIN_NODE_SIZE sizeof(int)
+
 static void
-init_node(MemNode *node, size_t size)
+init_node(struct MemNode *node, size_t size)
 {
 	assert(node != NULL);
-	assert(size > sizeof(MemNode));
+	assert(size > MIN_NODE_SIZE);
 
-	size_t buf_sz = size - sizeof(MemNode);
+	node->next = NULL;
+	node->next_avlb = NULL;
 
-	link_init(&node->next);
-	link_init(&node->next_avail);
-
-	readbfr_init(&node->buffer, buf_sz, node + 1);
+	readbfr_init(&node->buffer, size, node + 1);
 }
 
-MemNode *
-memnode_alloc(size_t *request)
+struct MemNode *
+memnode_alloc(size_t request)
 {
-	assert(request != NULL);
+	if (request < MIN_NODE_SIZE)
+		return NULL;
 
-	MemNode *node = malloc(*request);
+	struct MemNode *node =
+		malloc(request + sizeof(struct MemNode));
 
-	jump_if_null(node, no_mem);
+	if (node == NULL)
+		return memnode_alloc(request >> 1);
 
-	init_node(node, *request);
+	init_node(node, request);
 
 	return node;
+}
 
-no_mem:
-	*request >>= 1;
+void *
+memnode_next(struct MemNode *node, size_t size)
+{
+	assert(node != NULL);
+	assert(size > 0);
 
-	return (*request > sizeof(MemNode))
-		? memnode_alloc(request)
-		: NULL;
+	return readbfr_next(&node->buffer, size);
+}
+
+int
+memnode_has(struct MemNode *node, size_t size)
+{
+	assert(node != NULL);
+	assert(size > 0);
+
+	return readbfr_has(&node->buffer, size);
+}
+
+int
+memnode_full(struct MemNode *node)
+{
+	assert(node != NULL);
+
+	return !readbfr_has(&node->buffer, MIN_NODE_SIZE);
 }

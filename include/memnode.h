@@ -1,18 +1,19 @@
 #ifndef MEMNODE_H
 #define MEMNODE_H
 
-#include "link.h"
-#include "buffer.h"
-#include "bufrdr.h"
+#include "def.h"
+#include "readbfr.h"
 
 struct MemNode {
 	struct MemNode *next;
 	struct MemNode *next_avlb;
-	struct Buffer buffer;
-	struct BufRdr reader;
+	struct ReadBuffer buffer;
 };
 
-struct MemNode * memnode_alloc(size_t *request);
-bool             memnode_is_full(struct MemNode *);
+struct MemNode * memnode_alloc(size_t);
+void * memnode_next(struct MemNode *, size_t);
+
+int    memnode_has(struct MemNode *, size_t);
+int    memnode_full(struct MemNode *);
 
 #endif
