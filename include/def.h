@@ -11,7 +11,7 @@
 	((size_t) &((TYPE *)0)->MEMBER)
 #endif
 
-#define container_of(PTR, TYPE, MEMBER) \
+#define struct_of(PTR, TYPE, MEMBER) \
 	((TYPE *)((char *)(1 ? PTR : &((TYPE *)0)->MEMBER)\
 	- offsetof(TYPE, MEMBER)))
 
