@@ -1,6 +1,7 @@
 #include "mem.h"
 
 #include <assert.h>
+#include <stdlib.h>
 
 static void
 append(struct Mem *mem, struct MemNode *node)
