@@ -59,3 +59,7 @@ $(DDIR):
 .PHONY: clean
 clean:
 	rm -rf $(ODIR) $(DDIR) $(OUT)
+
+.PHONY: check
+check:
+	$(CC) $(CFLAGS) -fsyntax-only $(CFILES)
