@@ -19,6 +19,9 @@ append(struct Mem *mem, struct MemNode *node)
 
 	mem->last = node;
 	mem->last_avlb = node;
+
+	node->next = NULL;
+	node->next_avlb = NULL;
 }
 
 static void
