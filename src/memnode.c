@@ -17,21 +17,54 @@ init_node(struct MemNode *node, size_t size)
 	readbfr_init(&node->buffer, size, node + 1);
 }
 
+static struct MemNode *
+alloc_node(size_t request)
+{
+	struct MemNode *node =
+		malloc(request + sizeof(struct MemNode));
+
+	if (node != NULL)
+		init_node(node, request);
+
+	return node;
+}
+
+static struct MemNode *
+alloc_atleast(size_t minimum, size_t extra)
+{
+	if (extra < 2)
+		extra = 0;
+
+	struct MemNode *node = alloc_node(minimum + extra);
+
+	if (node == NULL)
+		if (extra)
+			return alloc_atleast(minimum, extra >> 1);
+
+	return node;
+}
+
 struct MemNode *
 memnode_alloc(size_t request)
 {
 	if (request < MIN_NODE_SIZE)
 		return NULL;
 
-	struct MemNode *node =
-		malloc(request + sizeof(struct MemNode));
+	struct MemNode *node = alloc_node(request);
 
 	if (node == NULL)
 		return memnode_alloc(request >> 1);
 
-	init_node(node, request);
-
 	return node;
+}
+
+struct MemNode *
+memnode_alloc_atleast(size_t minimum, size_t extra)
+{
+	if (minimum < MIN_NODE_SIZE)
+		minimum = MIN_NODE_SIZE;
+
+	return alloc_atleast(minimum, extra);
 }
 
 void *

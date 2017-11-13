@@ -42,7 +42,8 @@ add_space(struct Mem *mem, size_t request)
 {
 	assert(mem != NULL);
 
-	struct MemNode *node = memnode_alloc(mem->expansion);
+	struct MemNode *node =
+		memnode_alloc_atleast(request, mem->expansion);
 
 	if (node != NULL) {
 		append(mem, node);
@@ -124,8 +125,10 @@ void *
 mem_next(struct Mem *mem, size_t request)
 {
 	assert(mem != NULL);
-	assert(request < mem->expansion);
 	assert(request > 0);
+
+	if (request > mem->expansion)
+		return add_space(mem, request);
 
 	void *found = find_space(mem, request);
 

@@ -11,6 +11,8 @@ struct MemNode {
 };
 
 struct MemNode * memnode_alloc(size_t);
+struct MemNode * memnode_alloc_atleast(size_t min, size_t extra);
+
 void * memnode_next(struct MemNode *, size_t);
 
 int    memnode_has(struct MemNode *, size_t);
