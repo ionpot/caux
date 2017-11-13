@@ -16,6 +16,7 @@ append(struct Mem *mem, struct MemNode *node)
 
 	last->next = node;
 	last_avlb->next_avlb = node;
+
 	mem->last = node;
 	mem->last_avlb = node;
 }
@@ -46,7 +47,7 @@ add_space(struct Mem *mem, size_t request)
 		return memnode_next(node, request);
 	}
 
-	return NULL;
+	return node;
 }
 
 static void *
