@@ -10,7 +10,7 @@ buffer_init(struct Buffer *buf, size_t size, void *data)
 }
 
 void *
-buffer_get(struct Buffer *buf, usgn i)
+buffer_get(const struct Buffer *buf, usgn i)
 {
 	assert(i < buf->size);
 
@@ -26,13 +26,13 @@ buffer_set(struct Buffer *buf, usgn i, byte val)
 }
 
 int
-buffer_is_index(struct Buffer *buf, usgn i)
+buffer_is_index(const struct Buffer *buf, usgn i)
 {
 	return i < buf->size;
 }
 
 int
-buffer_is_size(struct Buffer *buf, size_t size)
+buffer_is_size(const struct Buffer *buf, size_t size)
 {
 	return size <= buf->size;
 }

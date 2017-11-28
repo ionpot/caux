@@ -77,7 +77,7 @@ memnode_next(struct MemNode *node, size_t size)
 }
 
 int
-memnode_has(struct MemNode *node, size_t size)
+memnode_has(const struct MemNode *node, size_t size)
 {
 	assert(node != NULL);
 	assert(size > 0);
@@ -86,7 +86,7 @@ memnode_has(struct MemNode *node, size_t size)
 }
 
 int
-memnode_full(struct MemNode *node)
+memnode_full(const struct MemNode *node)
 {
 	assert(node != NULL);
 

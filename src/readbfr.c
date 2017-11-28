@@ -33,7 +33,7 @@ readbfr_next(struct ReadBuffer *rb, size_t size)
 }
 
 int
-readbfr_has(struct ReadBuffer *rb, size_t size)
+readbfr_has(const struct ReadBuffer *rb, size_t size)
 {
 	assert(rb != NULL);
 
