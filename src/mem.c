@@ -59,6 +59,7 @@ static void *
 find_space(struct Mem *mem, size_t request)
 {
 	assert(mem != NULL);
+	assert(mem->expansion > request);
 
 	struct MemNode *node = mem->first_avlb;
 	struct MemNode **prev = &mem->first_avlb;
