@@ -15,8 +15,11 @@
 	((TYPE *)((char *)(1 ? PTR : &((TYPE *)0)->MEMBER)\
 	- offsetof(TYPE, MEMBER)))
 
-#define jump_if_null(PTR, LABEL) DOWL(\
-	if ((PTR) == NULL) goto LABEL;)
+#define jump_if(COND, LABEL) \
+	DOWL(if (COND) goto LABEL;)
+
+#define jump_if_null(PTR, LABEL) \
+	jump_if((PTR) == NULL, LABEL)
 
 typedef unsigned char byte;
 typedef size_t usgn;

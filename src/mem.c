@@ -129,12 +129,14 @@ mem_next(struct Mem *mem, size_t request)
 	assert(mem != NULL);
 	assert(request > 0);
 
-	if (request > mem->expansion)
-		return add_space(mem, request);
+	jump_if(request > mem->expansion, no_space);
 
 	void *found = find_space(mem, request);
 
-	return (found == NULL)
-		? add_space(mem, request)
-		: found;
+	jump_if_null(found, no_space);
+
+	return found;
+
+no_space:
+	return add_space(mem, request);
 }
