@@ -3,7 +3,7 @@
 #include <assert.h>
 
 void
-readbfr_init(struct ReadBuffer *rb, size_t size, void *data)
+readbfr_init(struct ReadBfr *rb, size_t size, void *data)
 {
 	assert(rb != NULL);
 
@@ -13,7 +13,7 @@ readbfr_init(struct ReadBuffer *rb, size_t size, void *data)
 }
 
 void
-readbfr_reset(struct ReadBuffer *rb)
+readbfr_reset(struct ReadBfr *rb)
 {
 	assert(rb != NULL);
 
@@ -21,7 +21,7 @@ readbfr_reset(struct ReadBuffer *rb)
 }
 
 void *
-readbfr_next(struct ReadBuffer *rb, size_t size)
+readbfr_next(struct ReadBfr *rb, size_t size)
 {
 	assert(rb != NULL);
 
@@ -33,7 +33,7 @@ readbfr_next(struct ReadBuffer *rb, size_t size)
 }
 
 int
-readbfr_has(struct ReadBuffer *rb, size_t size)
+readbfr_has(const struct ReadBfr *rb, size_t size)
 {
 	assert(rb != NULL);
 
