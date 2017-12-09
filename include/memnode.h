@@ -15,7 +15,7 @@ struct MemNode * memnode_alloc_atleast(size_t min, size_t extra);
 
 void * memnode_next(struct MemNode *, size_t);
 
-int    memnode_has(const struct MemNode *, size_t);
-int    memnode_full(const struct MemNode *);
+int memnode_has(const struct MemNode *, size_t);
+int memnode_full(const struct MemNode *);
 
 #endif
