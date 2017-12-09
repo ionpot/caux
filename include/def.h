@@ -18,7 +18,7 @@
 #define jump_if(COND, LABEL) \
 	DOWL(if (COND) goto LABEL;)
 
-#define jump_if_null(PTR, LABEL) \
+#define jump_ifnull(PTR, LABEL) \
 	jump_if((PTR) == NULL, LABEL)
 
 typedef unsigned char byte;

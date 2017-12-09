@@ -98,7 +98,7 @@ mem_init(struct Mem *mem, size_t initial)
 
 	struct MemNode *node = memnode_alloc(initial);
 
-	jump_if_null(node, no_mem);
+	jump_ifnull(node, no_mem);
 
 	mem->expansion = initial;
 	mem->first = node;
@@ -130,7 +130,7 @@ mem_next(struct Mem *mem, size_t request)
 
 	void *found = find_space(mem, request);
 
-	jump_if_null(found, no_space);
+	jump_ifnull(found, no_space);
 
 	return found;
 
