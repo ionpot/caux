@@ -7,7 +7,7 @@
 struct MemNode {
 	struct MemNode *next;
 	struct MemNode *next_avlb;
-	struct ReadBuffer buffer;
+	struct ReadBfr buffer;
 };
 
 struct MemNode * memnode_alloc(size_t);
